@@ -1,0 +1,32 @@
+services:
+  db:
+    build: /backend/db
+    container_name: db
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: AirQualityMonitor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build: /backend
+    container_name: api
+    ports:
+      - "80:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend
+          target: /app
+          ignore: 
+            - /db
+    depends_on:
+      db:
+        condition: service_healthy 
